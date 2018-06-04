@@ -185,7 +185,7 @@ int main() {
    fstat(fd, &s);
    size_t len = s.st_size;
    void *ptr = mmap(0, len, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
-   munmap(ptr, len);   
+   munmap(ptr, len);
 }
 " HAVE_MMAP )
 if ( HAVE_MMAP )
@@ -307,13 +307,13 @@ INCLUDE_DIRECTORIES (
   src/ext/openexr/IlmBase/Half
   src/ext/openexr/IlmBase/Iex
   src/ext/openexr/OpenEXR/IlmImf
-  ${CMAKE_BINARY_DIR}/src/ext/openexr/IlmBase/config
-  ${CMAKE_BINARY_DIR}/src/ext/openexr/OpenEXR/config
+  ${CMAKE_CURRENT_BINARY_DIR}/src/ext/openexr/IlmBase/config
+  ${CMAKE_CURRENT_BINARY_DIR}/src/ext/openexr/OpenEXR/config
 )
 IF(WIN32)
   SET(OPENEXR_LIBS IlmImf Imath Half ${ZLIB_LIBRARY})
 ELSE()
-  SET(OPENEXR_LIBS IlmImf Imath Half)
+  SET(OPENEXR_LIBS IlmImf Imath Half IexMath Iex IlmThread)
 ENDIF()
 
 ###########################################################################
@@ -473,6 +473,15 @@ SET ( PBRT_CXX11_FEATURES
   cxx_static_assert
 )
 TARGET_COMPILE_FEATURES ( pbrt PRIVATE ${PBRT_CXX11_FEATURES} )
+SET_TARGET_PROPERTIES ( pbrt PROPERTIES POSITION_INDEPENDENT_CODE ON)
+SET (pbrt_deps -Wl,--whole-archive
+  ${OPENEXR_LIBS}
+  glog
+  Ptex_static
+  ${ZLIB_LIBRARY}
+  -Wl,--no-whole-archive
+)
+TARGET_LINK_LIBRARIES ( pbrt ${pbrt_deps})
 
 IF (WIN32)
   # Avoid a name clash when building on Visual Studio
